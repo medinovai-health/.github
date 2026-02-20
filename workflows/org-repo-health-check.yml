@@ -1,0 +1,41 @@
+name: Org Repo Health Check
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 9am UTC
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Check org repo health
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const repos = await github.paginate(github.rest.repos.listForOrg, {
+              org: 'medinovai-health',
+              per_page: 100,
+              type: 'all'
+            });
+            
+            const issues = [];
+            for (const repo of repos) {
+              if (repo.archived) continue;
+              if (!repo.description) {
+                issues.push(`- **${repo.name}**: missing description`);
+              }
+              if (!repo.has_issues) {
+                issues.push(`- **${repo.name}**: issues disabled`);
+              }
+            }
+            
+            if (issues.length > 0) {
+              console.log('Health check findings:');
+              issues.forEach(i => console.log(i));
+            } else {
+              console.log('All repos healthy!');
+            }
