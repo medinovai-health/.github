@@ -1,0 +1,11 @@
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  ci:
+    uses: medinovai-health/medinovai-Deploy/.github/workflows/reusable/ci.yml@main
+    with:
+      category: docs-standards
+      service_name: github
+    secrets: inherit
